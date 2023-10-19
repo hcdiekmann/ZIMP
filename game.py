@@ -27,6 +27,7 @@ class Game:
         self.db = DataBasing(r"db\database.db")
         self._setup(start_coordinates)
         self.lost = False
+        self.completed_turn_sequence = False
         self.pretty_print = pprint.PrettyPrinter(width=41, indent=4)
 
     def _setup(self, start_coordinates):
@@ -152,7 +153,6 @@ class Game:
         """
         Move the player in the chosen direction.
         """
-        # TODO: logic to bash down wall if no more exits
         dir = direction.upper()
         new_location = self._move_direction(dir)
         if new_location is None:
@@ -173,6 +173,7 @@ class Game:
             self.gui.place_tile(new_tile, *new_location)
             self._place_new_tile(dir, new_tile)
 
+        self.completed_turn_sequence = True
         self.save_game()
 
     def _place_new_tile(self, chosen_exit, new_tile):
@@ -259,6 +260,7 @@ class Game:
         """
         handle logic for running away or fighting
         """
+        self._update_gui_labels()
         possible_actions = ['F', 'R']
         print("Enter 'F' to fight or 'R' to run away.")
         action = ""
@@ -274,11 +276,27 @@ class Game:
         self._fight_zombies(num_zombies)
         return False
 
-    def _escape_zombies(self, ):
+    def _escape_zombies(self):
         """
         Escape zombies to a previously explored room.
         """
-        # TODO: logic to only run into prevously explored rooms
+        directions = self._current_room().possible_exits()
+        escape_directions = []
+        for dir in directions:
+            location = self._update_location(dir)
+            if self.board.is_explored(location):
+                escape_directions.append(dir)
+
+        print(f"Possible escape directions: {escape_directions}")
+        chosen_dir = ""
+        while chosen_dir not in escape_directions:
+            chosen_dir = input("Choose your escape direction: ").upper()
+            if chosen_dir not in escape_directions:
+                print(
+                    f"Invalid direction. You can only escape to previously explored rooms. Please choose from: {escape_directions}")
+
+        self.player.location = self._update_location(chosen_dir)
+
         if 'Oil' in self.player.items:
             self.player.items.remove('Oil')
             return
@@ -288,14 +306,10 @@ class Game:
         """
         Fight zombies, take damage if attack is not enough.
         """
-        # TODO: logic to use items as attack
         damage = num_zombies - self.player.attack
         if damage >= 0:
             damage = min(damage, 4)  # max damage is 4
             self.player.take_damage(damage)
-            self.player.attack = 0
-        else:  # only decrease attack
-            self.player.attack += damage
 
     def _get_new_item(self):
         """
@@ -304,10 +318,10 @@ class Game:
         possible_actions = ["Y", "N"]
         action = ""
         if not self._game_over():
-            new_item = self.board.dev_cards.draw().content['Item']
-            item_name = new_item['text']
+            item = self.board.dev_cards.draw().content['Item']
+            new_item = item['text']
 
-            print(f"You found {item_name}")
+            print(f"You found {new_item}")
             if len(self.player.items) >= 2:
                 while action not in possible_actions:
                     action = input(
@@ -316,11 +330,25 @@ class Game:
                     if action not in possible_actions:
                         print(f"Invalid choice, choose: {possible_actions}")
                     if action == 'Y':
-                        self.remove_items(item_name)
+                        self.replace_item(new_item)
+                        self._update_attack(new_item)
             else:
-                self.player.items.append(item_name)
+                self.player.items.append(new_item)
+                self._update_attack(new_item)
 
-    def remove_items(self, item_name):
+    def _update_attack(self, item):
+        """Update the attack score based on the items inventory
+        """
+        if item == 'Soda Can':
+            self.player.health += 2
+        if item == 'Golf Club' or 'Grisly Femur' or 'Board with Nails':
+            self.player.attack += 1
+        if item == 'Machete':
+            self.player.attack += 2
+        if item == 'Chainsaw':
+            self.player.attack += 3
+
+    def replace_item(self, new_item):
         """
         This function does the logic for replacing items
         if the player wants to
@@ -330,13 +358,17 @@ class Game:
             item_to_replace = input("Choose an item to replace: ")
             if item_to_replace in self.player.items:
                 self.player.items.remove(item_to_replace)
-                self.player.items.append(item_name)
-                print(f"You replaced {item_to_replace} with {item_name}.")
+                self.player.items.append(new_item)
+                print(f"You replaced {item_to_replace} with {new_item}.")
                 return
             else:
                 print("Invalid item choice.")
 
     def cower(self):
+        if not self.completed_turn_sequence:
+            print('You need to complete a turn sequence before cowering')
+            return
+        self.completed_turn_sequence = False
         self.player.health += 3
         self.board.dev_cards.draw()
         self._update_gui_labels()
@@ -348,7 +380,10 @@ class Game:
         """
         Logic for bashing through a wall.
         """
-        # TODO: no cowering before bashing
+        if not self.completed_turn_sequence:
+            print("You can't bash afer after cowering.")
+            return
+
         valid_directions = ['N', 'E', 'S', 'W']
         dir = direction.upper()
 
