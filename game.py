@@ -1,123 +1,29 @@
-import json
+
 import pprint
 
 from board import Board
 from player import Player
 from GUI.gui import GUI
-from pickling import Pickling
-from databasing import DataBasing
-from stringfiler import StringFiler
-from shelving import Shelving
 
 
 class Game:
     """
     The Game class controls the game logic eg (movement, attack)
-
-    Christian, Same and Keagan have contributed to this class
     """
 
     def __init__(self, start_coordinates, board_size, card_data, card_image):
         self.player = Player(start_coordinates)
         self.board = Board(start_coordinates, card_data, card_image)
         self.gui = GUI(board_size)
-        self.pickle = Pickling()
-        self.shelving = Shelving()
-        self.strfiler = StringFiler()
-        self.db = DataBasing(r"db\database.db")
         self._setup(start_coordinates)
         self.lost = False
         self.completed_turn_sequence = False
         self.pretty_print = pprint.PrettyPrinter(width=41, indent=4)
 
     def _setup(self, start_coordinates):
-        self.db.create_table(tbl_name="player_path",
-                             col_name="location", d_type="TEXT")
-        self.db.create_table(tbl_name="player_health",
-                             col_name="health", d_type="INTEGER")
-        self.db.insert_data("player_health", "health",
-                            self.player.get_health())
-        self.db.insert_data("player_path", "location", str(start_coordinates))
         self.gui.place_tile(self.board.foyer_tile, *start_coordinates)
         self._update_gui_labels()
         self._print_current_room()
-
-    def save_game(self):
-        # save player object with pickle
-        self.pickle.save(self.player)
-
-        # store the players locations in the player table (Christian)
-        self.db.insert_data("player_path", "location",
-                            str(self.player.location))
-        self.db.insert_data("player_health", "health",
-                            self.player.get_health())
-
-        # save canvas as image
-        # self.gui.save_canvas_as_image("GUI/saved_game.png")
-
-        # string file
-        self.strfiler.save_file()
-        # Sam
-        print("************")
-        print("Saving Game")
-        print("************")
-
-    def load_game(self, filename):
-        try:
-            # load player details with pickle
-            file = self.pickle.load()
-            for player in file:
-                print(player.get_details())
-
-            # load players path and health progression from db
-            print(self.db.read_from_db("player_path", "location"))
-            print(self.db.read_from_db("player_health", "health"))
-
-            # load string from file
-            print(self.strfiler.load_file())
-        except:
-            # Keagan
-            print("************************************")
-            print(f"There is no file to load {filename}")
-            print("************************************")
-
-    def shelve_save(self, filename):
-        # Shelving
-        self.shelving.create_file(filename)
-        self.shelving.save_object(self.player, filename)
-
-    def shelve_load(self, filename):
-        try:
-            shelve_file = self.shelving.load_file_content(filename)
-            self.pretty_print.pprint(shelve_file)
-        except:
-            print("************************************")
-            print(f"There is no file to load {filename}")
-            print("************************************")
-
-    def json_save(self, filename):
-        details = {
-            "health": self.player.get_health(),
-            "attack": self.player.get_attack(),
-            "location": self.player.get_location(),
-            "items": self.player.get_items()
-        }
-        try:
-            with open(filename, 'w') as file:
-                json.dump(details, file)
-        except:
-            print("Please input a filename to save to")
-
-    def json_load(self, filename):
-        try:
-            with open(filename, 'r') as file:
-                data = file.read()
-                jata = json.loads(data)
-            self.pretty_print.pprint(jata)
-        except:
-            print("*********************************")
-            print(f'No JSON file of name {filename}')
-            print("*********************************")
 
     def get_details(self):
         print(self.player.get_details())
@@ -174,7 +80,6 @@ class Game:
             self._place_new_tile(dir, new_tile)
 
         self.completed_turn_sequence = True
-        self.save_game()
 
     def _place_new_tile(self, chosen_exit, new_tile):
         """
@@ -419,7 +324,7 @@ class Game:
             self._place_new_tile(dir, new_tile)
 
         if not self._game_over():
-            self.save_game()
+            pass
 
     def find_or_burry_totem(self):
         room = self._current_room()
