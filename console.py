@@ -5,7 +5,7 @@ from cmd import Cmd
 
 class Console(Cmd):
     """
-    Keagan Created class
+    The console class is used to create a command line interface for the game.
     """
 
     def __init__(self, start_coordinates, board_size, card_data, card_image):
