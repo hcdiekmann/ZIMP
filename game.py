@@ -1,6 +1,3 @@
-
-import pprint
-
 from board import Board
 from player import Player
 from GUI.gui import GUI
@@ -15,10 +12,8 @@ class Game:
         self.player = Player(start_coordinates)
         self.board = Board(start_coordinates, card_data, card_image)
         self.gui = GUI(board_size)
-        self._setup(start_coordinates)
-        self.lost = False
         self.completed_turn_sequence = False
-        self.pretty_print = pprint.PrettyPrinter(width=41, indent=4)
+        self._setup(start_coordinates)
 
     def _setup(self, start_coordinates):
         self.gui.place_tile(self.board.foyer_tile, *start_coordinates)
@@ -359,20 +354,15 @@ class Game:
         if self.board.dev_cards.count == 0:
             if self.board.time == "11 PM":
                 print("You ran out of time. GAME OVER!")
-                self.lost = True
                 return True
             self.board.update_time()
 
         if self.player.health <= 0:
             print("You died. GAME OVER!")
-            self.lost = True
             return True
 
         self._update_gui_labels()
         return False
-
-    def check_game_state(self):
-        return self.lost
 
     def _opposite_direction(self, direction):
         """

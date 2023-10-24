@@ -25,11 +25,10 @@ class Console(Cmd):
         north), \'E\' (for east), \'S\' (for south), \'W\' (for west).
 
         """
-        if not self.game.check_game_state():
-            try:
-                self.game.player_turn(direction)
-            except TypeError as err:
-                print(str(err))
+        try:
+            self.game.player_turn(direction)
+        except TypeError as err:
+            print(str(err))
 
     def do_bash(self, direction):
         """
@@ -68,4 +67,3 @@ class Console(Cmd):
         Prints the players details: Location, Health, Attack and Items
         """
         self.game.get_details()
-
