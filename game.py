@@ -24,11 +24,13 @@ class Game:
         print(self.player.get_details())
 
     def _update_gui_labels(self):
-        self.gui.update_dev_cards(self.board.dev_cards.count, self.board.time)
+        self.gui.update_dev_cards(
+            self.board.dev_cards.count, self.board.time)
         self.gui.update_tile_count(
             self.board.indoor_tiles.count, self.board.outdoor_tiles.count)
         self.gui.update_player_info(
-            self.player.health, self.player.attack, self.player.items, self.player.location)
+            self.player.health, self.player.attack, self.player.items,
+            self.player.location)
 
     def _print_current_room(self):
         print(f"You are in the {self._current_room().name}.")
@@ -68,7 +70,7 @@ class Game:
         else:
             new_tile, tile_type = self.board.draw_tile(self._current_room())
             if new_tile is None:
-                print(f"No more {tile_type} tiles to draw.")
+                print(f"No more {tile_type} to draw.")
                 return
             self.player.location = new_location
             self.gui.place_tile(new_tile, *new_location)
@@ -193,8 +195,8 @@ class Game:
             chosen_dir = input("Choose your escape direction: ").upper()
             if chosen_dir not in escape_directions:
                 print(
-                    f"Invalid direction. You can only escape to previously explored rooms. Please choose from: {escape_directions}")
-
+                    "Invalid direction. You can only escape to previously "
+                    f"explored rooms. Please choose from: {escape_directions}")
         self.player.location = self._update_location(chosen_dir)
 
         if 'Oil' in self.player.items:
@@ -293,7 +295,8 @@ class Game:
 
         if dir in self._current_room().possible_exits():
             print(
-                f"No need to bash. A valid exit exists, use 'go {dir}' commmand.")
+                f"No need to bash. A valid exit exists, use 'go {dir}'"
+                "commmand.")
             return
 
         current_room = self._current_room()

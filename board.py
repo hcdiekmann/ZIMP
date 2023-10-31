@@ -8,7 +8,7 @@
 # It holds the different game components. eg Development Cards, Tiles etc.
 # ---------------------------------------------------------------
 from card_deck import CardDeck
-from tile_deck import OutdoorTiles, IndoorTiles
+from tile_deck_factory import TileDeck
 
 
 class Board:
@@ -21,8 +21,8 @@ class Board:
         self.time = start_time
         self.tile_map = {}  # {(x, y): Tile}
         self.dev_cards = CardDeck(card_data, card_image)
-        self.outdoor_tiles = OutdoorTiles()
-        self.indoor_tiles = IndoorTiles()
+        self.outdoor_tiles = TileDeck.create('Outdoor')
+        self.indoor_tiles = TileDeck.create('Indoor')
         self.patio_tile = self.outdoor_tiles.draw_by_name('Patio')
         self.foyer_tile = self.indoor_tiles.draw_by_name('Foyer')
         self.tile_map[start_coordinates] = self.foyer_tile
@@ -46,9 +46,9 @@ class Board:
         """
         tile_type = current_room.tile_type
         tile = None
-        if tile_type == "outdoor":
+        if tile_type == "OutdoorTiles":
             tile = self.outdoor_tiles.draw()
-        elif tile_type == "indoor":
+        elif tile_type == "IndoorTiles":
             tile = self.indoor_tiles.draw()
 
         return tile, tile_type

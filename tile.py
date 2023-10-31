@@ -17,7 +17,7 @@ class Tile:
         self.image = image
         self.name = name
         self.exits = exits
-        self.tile_type = tile_type  # 'indoor' or 'outdoor'
+        self.tile_type = tile_type
 
     def display(self):
         """
