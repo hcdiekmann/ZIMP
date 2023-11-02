@@ -8,7 +8,7 @@
 # It holds the different game components. eg Development Cards, Tiles etc.
 # ---------------------------------------------------------------
 from card_deck import CardDeck
-from tile_deck_factory import TileDeck
+from tile_deck import TileDeck
 
 
 class Board:
@@ -17,12 +17,18 @@ class Board:
     """
 
     def __init__(self, start_coordinates, card_data, card_image,
+                 outdoor_tiles_img='assets/outdoor_tiles.jpg',
+                 indoor_tiles_img='assets/indoor_tiles.jpg',
+                 outdoor_tiles_data='assets/outdoor_tiles.json',
+                 indoor_tiles_data='assets/indoor_tiles.json',
                  start_time='9 PM'):
         self.time = start_time
         self.tile_map = {}  # {(x, y): Tile}
         self.dev_cards = CardDeck(card_data, card_image)
-        self.outdoor_tiles = TileDeck.create('Outdoor')
-        self.indoor_tiles = TileDeck.create('Indoor')
+        self.outdoor_tiles = TileDeck('Outdoor',
+                                      outdoor_tiles_img, outdoor_tiles_data)
+        self.indoor_tiles = TileDeck('Indoor',
+                                     indoor_tiles_img, indoor_tiles_data)
         self.patio_tile = self.outdoor_tiles.draw_by_name('Patio')
         self.foyer_tile = self.indoor_tiles.draw_by_name('Foyer')
         self.tile_map[start_coordinates] = self.foyer_tile
@@ -46,9 +52,9 @@ class Board:
         """
         tile_type = current_room.tile_type
         tile = None
-        if tile_type == "OutdoorTiles":
+        if tile_type == "Outdoor":
             tile = self.outdoor_tiles.draw()
-        elif tile_type == "IndoorTiles":
+        elif tile_type == "Indoor":
             tile = self.indoor_tiles.draw()
 
         return tile, tile_type
