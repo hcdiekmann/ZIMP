@@ -134,7 +134,7 @@ class TileDeck(ABC):
             name (str): The name of the tile to be drawn
 
         Returns:
-            Tile: The tile with the given name
+            Tile: The tile if found else None
         """
         for i, tile in enumerate(self.tiles):
             if tile.name == name:
@@ -156,7 +156,7 @@ class TileDeckInitializationError(Exception):
 
 
 class IndoorTileDeck(TileDeck):
-    ""
+    """A deck of indoor tiles."""
     @property
     def deck_name(self) -> str:
         return "Indoor"
@@ -171,6 +171,7 @@ class IndoorTileDeck(TileDeck):
 
 
 class OutdoorTileDeck(TileDeck):
+    """A deck of outdoor tiles."""
     @property
     def deck_name(self) -> str:
         return "Outdoor"
