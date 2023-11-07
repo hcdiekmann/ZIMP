@@ -8,7 +8,7 @@
 # It holds the different game components. eg Development Cards, Tiles etc.
 # ---------------------------------------------------------------
 from card_deck import CardDeck
-from tile_deck import TileDeck
+from tile_deck import IndoorTileDeck, OutdoorTileDeck
 
 
 class Board:
@@ -17,18 +17,12 @@ class Board:
     """
 
     def __init__(self, start_coordinates, card_data, card_image,
-                 outdoor_tiles_img='assets/outdoor_tiles.jpg',
-                 indoor_tiles_img='assets/indoor_tiles.jpg',
-                 outdoor_tiles_data='assets/outdoor_tiles.json',
-                 indoor_tiles_data='assets/indoor_tiles.json',
                  start_time='9 PM'):
         self.time = start_time
         self.tile_map = {}  # {(x, y): Tile}
         self.dev_cards = CardDeck(card_data, card_image)
-        self.outdoor_tiles = TileDeck('Outdoor',
-                                      outdoor_tiles_img, outdoor_tiles_data)
-        self.indoor_tiles = TileDeck('Indoor',
-                                     indoor_tiles_img, indoor_tiles_data)
+        self.outdoor_tiles = OutdoorTileDeck()
+        self.indoor_tiles = IndoorTileDeck()
         self.patio_tile = self.outdoor_tiles.draw_by_name('Patio')
         self.foyer_tile = self.indoor_tiles.draw_by_name('Foyer')
         self.tile_map[start_coordinates] = self.foyer_tile

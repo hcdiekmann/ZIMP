@@ -34,8 +34,8 @@ class Game:
 
     def _print_current_room(self):
         print(f"You are in the {self._current_room().name}.")
+        print(self._current_room().__str__())
         print(f"Possible directions: {self._current_room().possible_exits()}")
-        self._current_room().display()
 
     def _current_room(self):
         return self.board.tile_map[self.player.location]
@@ -96,7 +96,7 @@ class Game:
 
         self.gui.place_tile(new_tile, *self.player.location)
         self.board.tile_map[self.player.location] = new_tile
-        new_tile.display()
+        print(new_tile.__str__())
         self._resolve_dev_card()
 
     def _choose_entry(self, chosen_exit, new_tile, possible_entries):

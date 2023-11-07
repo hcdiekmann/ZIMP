@@ -48,7 +48,7 @@ class Tile:
             ValueError: if direction is not a valid cardinal direction
         """
         if direction in 'NESW':
-            self._exits[direction] = True
+            self.exits[direction] = True
         else:
             raise ValueError(f"{direction} is not a valid exit direction")
 
