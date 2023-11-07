@@ -127,7 +127,7 @@ class TileDeck(ABC):
 
         return image
 
-    def draw_by_name(self, name) -> Tile:
+    def draw_by_name(self, name: str) -> Tile:
         """Draws a tile from the deck by name.
 
         Args:
@@ -193,4 +193,5 @@ if __name__ == '__main__':
     print(bathroom_tile.exits)
     tile = indoor_tiles.draw()
     print(f"Random tile: {tile.name}")
+    print(tile.__str__())
     print(f"Indoor tile count: {indoor_tiles.count}")
