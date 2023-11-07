@@ -5,56 +5,81 @@
 #
 # Description:
 # A deck of tiles represented as a Python class.
-# Using Factory Method and Abstract Base Class design patterns for
-# creation and structure of tile decks.
+# Using Template method design pattern
 # ---------------------------------------------------------------
 import json
-import random
+from abc import ABC, abstractmethod
+from typing import List
+from random import shuffle
 from PIL import Image, UnidentifiedImageError
 from tile import Tile
 
 
-class TileDeck:
-    """
-    A tile deck is a collection of tiles that can be drawn from.
-    """
-    def __init__(self, deck_type, image_path, metadata_path, img_num_rows=2, img_num_cols=4):
-        self.tiles = []
-        self.count = 0
-        self.image_rows = img_num_rows
-        self.image_cols = img_num_cols
-        self.deck_type = deck_type
-        self.image_path = image_path
-        self.metadata_path = metadata_path
-        self._initialize_tiles()
+class TileDeck(ABC):
 
-    def _initialize_tiles(self) -> None:
-        """
-        Initializes the list of tiles in the deck from the image and metadata.
-        """
-        tile_metadata = self._load_metadata(self.metadata_path)
-        image = self._load_image(self.image_path)
-        tile_width, tile_height = self._get_tile_dimensions(image)
-
-        index = 1
-        for i, j in self._iterate_tile_positions():
-            tile_image = self._crop_tile_image(
-                image, i, j, tile_width, tile_height)
-            metadata = tile_metadata[str(index)]
-            self._add_tile(tile_image, metadata)
-            index += 1
-
-        self._shuffle_tiles()
+    def __init__(self):
+        self.tiles = self._initialize_tiles()
         self.count = len(self.tiles)
 
+    @property
+    @abstractmethod
+    def deck_name(self) -> str:
+        """The type/name of the deck, to be defined by subclasses."""
+        pass
+
+    @property
+    @abstractmethod
+    def _metadata_path(self) -> str:
+        """The path to the metadata file, to be defined by subclasses."""
+        pass
+
+    @property
+    @abstractmethod
+    def _image_path(self) -> str:
+        """The path to the image file, to be defined by subclasses."""
+        pass
+
+    @property
+    def _num_rows_in_img(self) -> int:
+        """The number of rows of tiles in the image."""
+        return 2
+
+    @property
+    def _num_cols_in_img(self) -> int:
+        """The number of columns of tiles in the image."""
+        return 4
+
+    def _initialize_tiles(self) -> List[Tile]:
+        """Creates and initializes tiles from the image and metadata.
+
+        Returns:
+            List[Tile]: The list of tiles in the deck
+        """
+        image = self._load_image()
+        tile_width, tile_height = self._get_tile_dimensions(image)
+        tile_metadata = self._load_metadata()
+
+        tiles = [
+            self._create_tile(
+                self._crop_tile_image(
+                    image, i, j, tile_width, tile_height
+                ),
+                tile_metadata[str(index)]
+            )  # generator expression
+            for index, (i, j) in enumerate(self._iterate_tile_positions(),
+                                           start=1)
+        ]
+        shuffle(tiles)
+        return tiles
+
     def _get_tile_dimensions(self, image) -> tuple:
-        tile_width = image.width // self.image_cols
-        tile_height = image.height // self.image_rows
+        tile_width = image.width // self._num_cols_in_img
+        tile_height = image.height // self._num_rows_in_img
         return tile_width, tile_height
 
     def _iterate_tile_positions(self) -> tuple:
-        for i in range(self.image_rows):
-            for j in range(self.image_cols):
+        for i in range(self._num_rows_in_img):
+            for j in range(self._num_cols_in_img):
                 yield i, j
 
     def _crop_tile_image(self, image, i, j, tile_width, tile_height) -> Image:
@@ -64,47 +89,46 @@ class TileDeck:
         bottom = (i + 1) * tile_height
         return image.crop((left, top, right, bottom))
 
-    def _add_tile(self, tile_image, metadata) -> None:
-        tile = Tile(tile_image, metadata['name'],
-                    metadata['exits'], self.deck_type)
-        self.tiles.append(tile)
+    def _create_tile(self, tile_image, metadata) -> Tile:
+        return Tile(tile_image, metadata['name'],
+                    metadata['exits'], self.deck_name)
 
-    def _shuffle_tiles(self) -> None:
-        random.shuffle(self.tiles)
-
-    def _load_metadata(self, metadata_path) -> dict:
+    def _load_metadata(self) -> dict:
         try:
-            with open(metadata_path, 'r') as file:
+            with open(self._metadata_path, 'r') as file:
                 tile_metadata = json.load(file)
         except FileNotFoundError as e:
             raise TileDeckInitializationError(
-                f"File {metadata_path} not found.") from e
+                f"File {self._metadata_path} not found.") from e
         except json.JSONDecodeError as e:
             raise TileDeckInitializationError(
-                f"Error decoding JSON from {metadata_path}.") from e
+                f"Error decoding JSON from {self._metadata_path}.") from e
 
-        # check that name and exits are present in the metadata
-        for tile in tile_metadata.values():
-            if 'name' not in tile or 'exits' not in tile:
-                raise TileDeckInitializationError(
-                    f"Invalid metadata in {metadata_path}. Make sure that "
-                    f"each tile has a 'name' and 'exits' key.")
+        self._validate_metadata(tile_metadata)
         return tile_metadata
 
-    def _load_image(self, image_path) -> Image:
+    def _validate_metadata(self, metadata):
+        for index, tile in metadata.items():
+            if 'name' not in tile or 'exits' not in tile:
+                raise TileDeckInitializationError(
+                    f"Invalid metadata for tile {index} in "
+                    f"{self._metadata_path}. "
+                    f"Make sure that each tile has a 'name' and 'exits' key.")
+
+    def _load_image(self) -> Image:
         try:
-            image = Image.open(image_path)
+            image = Image.open(self._image_path)
         except FileNotFoundError as e:
             raise TileDeckInitializationError(
-                f"Tile image file {image_path} not found.") from e
+                f"Tile image file {self._image_path} not found.") from e
         except UnidentifiedImageError as e:
             raise TileDeckInitializationError(
-                f"Invalid tile image for file {image_path}.") from e
+                f"Invalid tile image for file {self._image_path}.") from e
 
         return image
 
     def draw_by_name(self, name) -> Tile:
-        """Draws a tile from the deck by name
+        """Draws a tile from the deck by name.
 
         Args:
             name (str): The name of the tile to be drawn
@@ -119,9 +143,7 @@ class TileDeck:
         return None
 
     def draw(self) -> Tile:
-        """
-        Draws a tile from the deck.
-        """
+        """Draws a tile from the top of the deck."""
         if self.count > 0:
             tile = self.tiles.pop(0)
             self.count -= 1
@@ -133,35 +155,41 @@ class TileDeckInitializationError(Exception):
     pass
 
 
+class IndoorTileDeck(TileDeck):
+    ""
+    @property
+    def deck_name(self) -> str:
+        return "Indoor"
+
+    @property
+    def _metadata_path(self) -> str:
+        return "assets/indoor_tiles.json"
+
+    @property
+    def _image_path(self) -> str:
+        return "assets/indoor_tiles.jpg"
+
+
+class OutdoorTileDeck(TileDeck):
+    @property
+    def deck_name(self) -> str:
+        return "Outdoor"
+
+    @property
+    def _metadata_path(self) -> str:
+        return "assets/outdoor_tiles.json"
+
+    @property
+    def _image_path(self) -> str:
+        return "assets/outdoor_tiles.jpg"
+
+
 if __name__ == '__main__':
-    # Create a deck of indoor and outdoor tiles
-    indoor_deck = TileDeck('Indoor', 'assets/indoor_tiles.jpg', 'assets/indoor_tiles.json')
-    outdoor_deck = TileDeck('Outdoor', 'assets/outdoor_tiles.jpg', 'assets/outdoor_tiles.json')
-
-    print(f"Indoor deck count: {indoor_deck.count}")
-    print(f"Outdoor deck count: {outdoor_deck.count}")
-
-    # Draw a specific tile from the indoor deck
-    indoor_tile = indoor_deck.draw_by_name('Bathroom')
-    print(f"Indoor tile: {indoor_tile.name}")
-    print(f"Bathroom exits: {indoor_tile.exits}")
-
-    # Check if the tile is from the indoor or outdoor deck
-    print(f"Is indoor tile: {indoor_tile.tile_type == 'Indoor'}")
-    print(f"Is outdoor tile: {indoor_tile.tile_type == 'Outdoor'}")
-
-    # Draw a specific tile from the outdoor deck
-    outdoor_tile = outdoor_deck.draw_by_name('Graveyard')
-    print(f"Outdoor tile: {outdoor_tile.name}")
-    print(f"Graveyard exits: {outdoor_tile.exits}")
-
-    # Draw a tile from the indoor deck
-    indoor_tile = indoor_deck.draw()
-    # Draw a tile from the outdoor deck
-    outdoor_tile = outdoor_deck.draw()
-
-    print(f"Indoor tile: {indoor_tile.name}")
-    print(f"Outdoor tile: {outdoor_tile.name}")
-
-    print(f"Indoor deck count: {indoor_deck.count}")
-    print(f"Outdoor deck count: {outdoor_deck.count}")
+    # Example usage:
+    indoor_tiles = IndoorTileDeck()
+    print(f"Indoor tile count: {indoor_tiles.count}")
+    bathroom_tile = indoor_tiles.draw_by_name('Bathroom')
+    print(bathroom_tile.exits)
+    tile = indoor_tiles.draw()
+    print(f"Random tile: {tile.name}")
+    print(f"Indoor tile count: {indoor_tiles.count}")
