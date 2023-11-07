@@ -6,12 +6,10 @@
 # Description:
 # A tile is a single square on the game board.
 # It has a name, an image, and exits to other tiles.
-# Also has a tile type, either 'indoor' or 'outdoor'.
+# Also has a tile type determined by the deck it belongs to.
 # ---------------------------------------------------------------
 class Tile:
-    """
-    A tile is a single square on the game board.
-    """
+    """A tile is a single square on the game board."""
 
     def __init__(self, image, name, exits, tile_type):
         self.image = image
@@ -19,11 +17,10 @@ class Tile:
         self.exits = exits
         self.tile_type = tile_type
 
-    def display(self):
-        """
-        Display the tile name and exits in a nice ASCII art format.
-        """
-        max_name_len = 15  # Set this to the length of the longest name
+    def __str__(self):
+        """Representation of the tile name and exits in ASCII art format."""
+        max_name_len = max(
+            15, len(self.name))  # Adjust to the length of the longest name
         padded_name = self.name.center(max_name_len)  # Center the name
 
         top_exit = ' ' if self.exits['N'] else '_'
@@ -31,27 +28,38 @@ class Tile:
         bottom_exit = ' ' if self.exits['S'] else '_'
         left_exit = ' ' if self.exits['W'] else '|'
 
-        print(f" {top_exit * (max_name_len + 2)} ")
-        print(f"+{' ' * (max_name_len + 2)}+")
-        print(f"{left_exit} {padded_name} {right_exit}")
-        print(f"+{bottom_exit * (max_name_len + 2)}+")
-        print('')
+        tile_str = f" {top_exit * (max_name_len + 2)} \n"
+        tile_str += f"+{' ' * (max_name_len + 2)}+\n"
+        tile_str += f"{left_exit} {padded_name} {right_exit}\n"
+        tile_str += f"+{bottom_exit * (max_name_len + 2)}+\n"
+        return tile_str
 
     def possible_exits(self):
-        """
-        List of possible exits from the tile.
-        """
+        """List of possible exits from the tile."""
         return [d for d, is_exit in self.exits.items() if is_exit]
 
-    def add_exit(self, direction):
-        """
-        Add an exit in the given direction to the tile.
-        """
-        self.exits[direction] = True
+    def add_exit(self, direction: str) -> None:
+        """Add an exit in the given direction to the tile.
 
-    def rotate(self, entry, exit):
+        Args:
+            direction (str): A cardinal direction, 'N', 'E', 'S', or 'W'
+
+        Raises:
+            ValueError: if direction is not a valid cardinal direction
         """
-        Rotate tile to align the chosen entry with the chosen exit.
+        if direction in 'NESW':
+            self._exits[direction] = True
+        else:
+            raise ValueError(f"{direction} is not a valid exit direction")
+
+    def rotate(self, entry: str, exit: str) -> 'Tile':
+        """Rotate tile to align the chosen entry with the chosen exit.
+
+        Args:
+            entry (str): the direction of the entry
+            exit (str): the direction of the exit
+        Returns:
+            Tile: the rotated tile
         """
         rotations = {'N': {'N': 2, 'E': 1, 'S': 0, 'W': 3},
                      'E': {'N': 3, 'E': 2, 'S': 1, 'W': 0},
