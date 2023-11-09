@@ -28,9 +28,7 @@ class Board:
         self.tile_map[start_coordinates] = self.foyer_tile
 
     def update_time(self):
-        """
-        Update the time and create a new dev card deck.
-        """
+        """Update the time and create a new dev card deck."""
         self.time = '10 PM' if self.time == '9 PM' else '11 PM'
         self.dev_cards = CardDeck()
 

@@ -1,33 +1,33 @@
 {
-  "1": {
+  "0": {
     "name": "Garden",
     "exits": { "N": false, "S": true, "E": true, "W": true }
   },
-  "2": {
+  "1": {
     "name": "Sitting Area",
     "exits": { "N": false, "S": true, "E": true, "W": true }
   },
-  "3": {
+  "2": {
     "name": "Yard",
     "exits": { "N": false, "S": true, "E": true, "W": true }
   },
-  "4": {
+  "3": {
     "name": "Graveyard",
     "exits": { "N": false, "S": true, "E": true, "W": false }
   },
-  "5": {
+  "4": {
     "name": "Garage",
     "exits": { "N": false, "S": true, "E": false, "W": true }
   },
-  "6": {
+  "5": {
     "name": "Patio",
     "exits": { "N": true, "S": true, "E": true, "W": false }
   },
-  "7": {
+  "6": {
     "name": "Yard",
     "exits": { "N": false, "S": true, "E": true, "W": true }
   },
-  "8": {
+  "7": {
     "name": "Yard",
     "exits": { "N": false, "S": true, "E": true, "W": true }
   }

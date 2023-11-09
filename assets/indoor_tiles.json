@@ -1,33 +1,33 @@
 {
-  "1": {
+  "0": {
     "name": "Bathroom",
     "exits": { "N": true, "S": false, "E": false, "W": false }
   },
-  "2": {
+  "1": {
     "name": "Kitchen",
     "exits": { "N": true, "S": false, "E": true, "W": true }
   },
-  "3": {
+  "2": {
     "name": "Storage",
     "exits": { "N": true, "S": false, "E": false, "W": false }
   },
-  "4": {
+  "3": {
     "name": "Evil Temple",
     "exits": { "N": false, "S": false, "E": true, "W": true }
   },
-  "5": {
+  "4": {
     "name": "Family Room",
     "exits": { "N": true, "S": false, "E": true, "W": true }
   },
-  "6": {
+  "5": {
     "name": "Dining Room",
     "exits": { "N": true, "S": true, "E": true, "W": true }
   },
-  "7": {
+  "6": {
     "name": "Bedroom",
     "exits": { "N": true, "S": false, "E": false, "W": true }
   },
-  "8": {
+  "7": {
     "name": "Foyer",
     "exits": { "N": true, "S": false, "E": false, "W": false }
   }

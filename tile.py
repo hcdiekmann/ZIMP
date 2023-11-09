@@ -53,14 +53,6 @@ class Tile:
             raise ValueError(f"{direction} is not a valid exit direction")
 
     def rotate(self, entry: str, exit: str) -> 'Tile':
-        """Rotate tile to align the chosen entry with the chosen exit.
-
-        Args:
-            entry (str): the direction of the entry
-            exit (str): the direction of the exit
-        Returns:
-            Tile: the rotated tile
-        """
         rotations = {'N': {'N': 2, 'E': 1, 'S': 0, 'W': 3},
                      'E': {'N': 3, 'E': 2, 'S': 1, 'W': 0},
                      'S': {'N': 0, 'E': 3, 'S': 2, 'W': 1},

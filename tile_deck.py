@@ -16,38 +16,34 @@ from tile import Tile
 
 
 class TileDeck(ABC):
+    """A deck of tiles."""
 
     def __init__(self):
-        self.tiles = self._initialize_tiles()
-        self.count = len(self.tiles)
+        self._tiles = self._initialize_tiles()
 
     @property
+    def count(self) -> int:
+        return len(self._tiles)
+
     @abstractmethod
     def deck_name(self) -> str:
-        """The type/name of the deck, to be defined by subclasses."""
         pass
 
-    @property
     @abstractmethod
-    def _metadata_path(self) -> str:
-        """The path to the metadata file, to be defined by subclasses."""
+    def metadata_path(self) -> str:
         pass
 
-    @property
     @abstractmethod
-    def _image_path(self) -> str:
-        """The path to the image file, to be defined by subclasses."""
+    def image_path(self) -> str:
         pass
 
-    @property
-    def _num_rows_in_img(self) -> int:
-        """The number of rows of tiles in the image."""
-        return 2
+    @abstractmethod
+    def num_cols_in_img(self) -> int:
+        pass
 
-    @property
-    def _num_cols_in_img(self) -> int:
-        """The number of columns of tiles in the image."""
-        return 4
+    @abstractmethod
+    def num_rows_in_img(self) -> int:
+        pass
 
     def _initialize_tiles(self) -> List[Tile]:
         """Creates and initializes tiles from the image and metadata.
@@ -56,30 +52,28 @@ class TileDeck(ABC):
             List[Tile]: The list of tiles in the deck
         """
         image = self._load_image()
-        tile_width, tile_height = self._get_tile_dimensions(image)
+        width, height = self._get_tile_dimensions(image)
         tile_metadata = self._load_metadata()
 
-        tiles = [
-            self._create_tile(
-                self._crop_tile_image(
-                    image, i, j, tile_width, tile_height
-                ),
-                tile_metadata[str(index)]
-            )  # generator expression
-            for index, (i, j) in enumerate(self._iterate_tile_positions(),
-                                           start=1)
-        ]
+        tiles = []
+        for index, (i, j) in enumerate(self._iterate_tile_positions()):
+            tile_image = self._crop_tile_image(
+                image, i, j, width, height)
+            metadata = tile_metadata[str(index)]
+            tile = self._create_tile(tile_image, metadata)
+            tiles.append(tile)
+
         shuffle(tiles)
         return tiles
 
-    def _get_tile_dimensions(self, image) -> tuple:
-        tile_width = image.width // self._num_cols_in_img
-        tile_height = image.height // self._num_rows_in_img
+    def _get_tile_dimensions(self, image: Image) -> tuple:
+        tile_width = image.width // self.num_cols_in_img()
+        tile_height = image.height // self.num_rows_in_img()
         return tile_width, tile_height
 
     def _iterate_tile_positions(self) -> tuple:
-        for i in range(self._num_rows_in_img):
-            for j in range(self._num_cols_in_img):
+        for i in range(self.num_rows_in_img()):
+            for j in range(self.num_cols_in_img()):
                 yield i, j
 
     def _crop_tile_image(self, image, i, j, tile_width, tile_height) -> Image:
@@ -94,36 +88,37 @@ class TileDeck(ABC):
                     metadata['exits'], self.deck_name)
 
     def _load_metadata(self) -> dict:
+        data_path = self.metadata_path()
         try:
-            with open(self._metadata_path, 'r') as file:
+            with open(data_path, 'r') as file:
                 tile_metadata = json.load(file)
         except FileNotFoundError as e:
             raise TileDeckInitializationError(
-                f"File {self._metadata_path} not found.") from e
+                f"File {data_path} not found.") from e
         except json.JSONDecodeError as e:
             raise TileDeckInitializationError(
-                f"Error decoding JSON from {self._metadata_path}.") from e
+                f"Error decoding JSON from {data_path}.") from e
 
-        self._validate_metadata(tile_metadata)
+        self._validate_metadata(tile_metadata, data_path)
         return tile_metadata
 
-    def _validate_metadata(self, metadata):
+    def _validate_metadata(self, metadata: dict, path: str) -> None:
         for index, tile in metadata.items():
             if 'name' not in tile or 'exits' not in tile:
                 raise TileDeckInitializationError(
-                    f"Invalid metadata for tile {index} in "
-                    f"{self._metadata_path}. "
+                    f"Invalid metadata for tile {index} in {path}."
                     f"Make sure that each tile has a 'name' and 'exits' key.")
 
     def _load_image(self) -> Image:
+        path = self.image_path()
         try:
-            image = Image.open(self._image_path)
+            image = Image.open(path)
         except FileNotFoundError as e:
             raise TileDeckInitializationError(
-                f"Tile image file {self._image_path} not found.") from e
+                f"Tile image file {path} not found.") from e
         except UnidentifiedImageError as e:
             raise TileDeckInitializationError(
-                f"Invalid tile image for file {self._image_path}.") from e
+                f"Invalid tile image for file {path}.") from e
 
         return image
 
@@ -136,18 +131,15 @@ class TileDeck(ABC):
         Returns:
             Tile: The tile if found else None
         """
-        for i, tile in enumerate(self.tiles):
+        for i, tile in enumerate(self._tiles):
             if tile.name == name:
-                self.count -= 1
-                return self.tiles.pop(i)
+                return self._tiles.pop(i)
         return None
 
     def draw(self) -> Tile:
         """Draws a tile from the top of the deck."""
-        if self.count > 0:
-            tile = self.tiles.pop(0)
-            self.count -= 1
-            return tile
+        if len(self._tiles) > 0:
+            return self._tiles.pop(0)
         return None
 
 
@@ -157,32 +149,40 @@ class TileDeckInitializationError(Exception):
 
 class IndoorTileDeck(TileDeck):
     """A deck of indoor tiles."""
-    @property
+
     def deck_name(self) -> str:
         return "Indoor"
 
-    @property
-    def _metadata_path(self) -> str:
+    def metadata_path(self) -> str:
         return "assets/indoor_tiles.json"
 
-    @property
-    def _image_path(self) -> str:
+    def image_path(self) -> str:
         return "assets/indoor_tiles.jpg"
+
+    def num_cols_in_img(self) -> int:
+        return 4
+
+    def num_rows_in_img(self) -> int:
+        return 2
 
 
 class OutdoorTileDeck(TileDeck):
     """A deck of outdoor tiles."""
-    @property
+
     def deck_name(self) -> str:
         return "Outdoor"
 
-    @property
-    def _metadata_path(self) -> str:
+    def metadata_path(self) -> str:
         return "assets/outdoor_tiles.json"
 
-    @property
-    def _image_path(self) -> str:
+    def image_path(self) -> str:
         return "assets/outdoor_tiles.jpg"
+
+    def num_cols_in_img(self) -> int:
+        return 4
+
+    def num_rows_in_img(self) -> int:
+        return 2
 
 
 if __name__ == '__main__':
