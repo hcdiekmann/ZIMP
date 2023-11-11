@@ -1,15 +1,15 @@
 import unittest
-from tile_deck import IndoorTiles
+from tile_deck import IndoorTileDeck
 
 
 class TestTileDeck(unittest.TestCase):
 
     def setUp(self):
-        self.tile_deck = IndoorTiles()
+        self.tile_deck = IndoorTileDeck()
 
     def test_init(self):
-        self.assertIsNotNone(self.tile_deck.tiles)
-        self.assertEqual(self.tile_deck.count, len(self.tile_deck.tiles))
+        self.assertIsNotNone(self.tile_deck._tiles)
+        self.assertEqual(self.tile_deck.count, len(self.tile_deck._tiles))
 
     def test_draw(self):
         initial_count = self.tile_deck.count
@@ -23,8 +23,7 @@ class TestTileDeck(unittest.TestCase):
         self.assertEqual(tile.name, "Bathroom")
 
     def test_draw_empty_deck(self):
-        self.tile_deck.tiles = []
-        self.tile_deck.count = 0
+        self.tile_deck._tiles = []
         tile = self.tile_deck.draw()
         self.assertIsNone(tile)
 
