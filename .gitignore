@@ -10,6 +10,6 @@ __pycache__/
 *.bak
 *.dir
 *.dat
-myenv/
+*.coverage
 htmlcov/
-.coverage
+myenv/
