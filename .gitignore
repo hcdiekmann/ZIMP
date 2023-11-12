@@ -9,4 +9,6 @@ __pycache__/
 *.db-journal
 *.bak
 *.dir
-*.dat
+*.coverage
+htmlcov/
+myenv/
