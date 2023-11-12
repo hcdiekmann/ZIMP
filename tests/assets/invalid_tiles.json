@@ -1,0 +1,32 @@
+{
+  "0": {
+    "exits": { "N": false, "S": true, "E": true, "W": true }
+  },
+  "1": {
+    "name": "Sitting Area"
+  },
+  "2": {
+    "name": "Yard",
+    "exits": { "N": false, "S": true, "E": true, "W": true }
+  },
+  "3": {
+    "name": "Graveyard",
+    "exits": { "N": false, "S": true, "E": true, "W": false }
+  },
+  "4": {
+    "name": "Garage",
+    "exits": { "N": false, "S": true, "E": false, "W": true }
+  },
+  "5": {
+    "name": "Patio",
+    "exits": { "N": true, "S": true, "E": true, "W": false }
+  },
+  "6": {
+    "name": "Yard",
+    "exits": { "N": false, "S": true, "E": true, "W": true }
+  },
+  "7": {
+    "name": "Yard",
+    "exits": { "N": false, "S": true, "E": true, "W": true }
+  }
+}
