@@ -11,7 +11,7 @@ class Game:
     def __init__(self, start_coordinates, board_size, card_data, card_image):
         self.player = Player(start_coordinates)
         self.board = Board(start_coordinates, card_data, card_image)
-        self.gui = GUI(board_size)
+        self.gui = GUI(board_size=board_size)
         self.completed_turn_sequence = False
         self._setup(start_coordinates)
 

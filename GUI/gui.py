@@ -23,60 +23,36 @@ class GUI:
         self.player_row = 0
         self.player_col = 0
 
-        # Create a main frame to hold the lables
-        self.main_frame = tk.Frame(self.root)
-        self.main_frame.pack(fill=tk.BOTH, expand=1)
-
-        # Create a frame to contain the Canvas
-        self.canvas_frame = tk.Frame(self.main_frame)
-        self.canvas_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-
-        # Add a canvas to the canvas frame
-        self.canvas = tk.Canvas(self.canvas_frame)
-        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
-
-        # Create scrollbars for the canvas
-        self.scrollbar_y = tk.Scrollbar(
-            self.canvas_frame, orient="vertical", command=self.canvas.yview)
-        self.scrollbar_y.pack(side=tk.RIGHT, fill=tk.Y)
-        self.scrollbar_x = tk.Scrollbar(
-            self.main_frame, orient="horizontal", command=self.canvas.xview)
-        self.scrollbar_x.pack(side=tk.BOTTOM, fill=tk.X)
-
+        self.main_frame = self.create_frame(self.root, fill=tk.BOTH, expand=1)
+        self.canvas_frame = self.create_frame(
+            self.main_frame, side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.canvas = self.create_canvas(
+            self.canvas_frame, side=tk.LEFT, fill=tk.BOTH, expand=1)
+        self.scrollbar_y = self.create_scrollbar(
+            self.canvas_frame, "vertical", self.canvas.yview, side=tk.RIGHT, fill=tk.Y)
+        self.scrollbar_x = self.create_scrollbar(
+            self.main_frame, "horizontal", self.canvas.xview, side=tk.BOTTOM, fill=tk.X)
         self.canvas.configure(
             yscrollcommand=self.scrollbar_y.set, xscrollcommand=self.scrollbar_x.set)
 
-        # Add widgets to the  the root window
-        self.frame_group1 = tk.Frame(self.root)
-        self.frame_group1.pack(side=tk.LEFT, padx=20)
+        self.frame_group1 = self.create_frame(self.root, side=tk.LEFT, padx=20)
+        self.frame_group2 = self.create_frame(self.root, side=tk.LEFT, padx=60)
 
-        self.frame_group2 = tk.Frame(self.root)
-        self.frame_group2.pack(side=tk.LEFT, padx=60)
-
-        self.label_time = tk.Label(self.frame_group1, text="Time: ")
-        self.label_time.pack()
-        self.label_dev_cards = tk.Label(
+        self.label_time = self.create_label(self.frame_group1, text="Time: ")
+        self.label_dev_cards = self.create_label(
             self.frame_group1, text="Development Cards: ")
-        self.label_dev_cards.pack()
-
-        self.lable_outdoor_tiles = tk.Label(
+        self.lable_outdoor_tiles = self.create_label(
             self.frame_group1, text="Outdoor Tiles: ")
-        self.lable_outdoor_tiles.pack()
-        self.lable_indoor_tiles = tk.Label(
+        self.lable_indoor_tiles = self.create_label(
             self.frame_group1, text="Indoor Tiles: ")
-        self.lable_indoor_tiles.pack()
 
-        self.lable_health = tk.Label(self.frame_group2, text="Health: ")
-        self.lable_health.pack()
-        self.lable_attack = tk.Label(self.frame_group2, text="Attack: ")
-        self.lable_attack.pack()
-        self.items = tk.Label(self.frame_group2, text="Items: ")
-        self.items.pack()
+        self.lable_health = self.create_label(
+            self.frame_group2, text="Health: ")
+        self.lable_attack = self.create_label(
+            self.frame_group2, text="Attack: ")
+        self.items = self.create_label(self.frame_group2, text="Items: ")
 
-        # Create another frame INSIDE the canvas
-        self.frame_inside_canvas = tk.Frame(self.canvas)
-
-        # Add that inner frame to a window in the canvas
+        self.frame_inside_canvas = self.create_frame(self.canvas, anchor="nw")
         self.canvas.create_window(
             (0, 0), window=self.frame_inside_canvas, anchor="nw")
 
@@ -87,13 +63,32 @@ class GUI:
                     j * self.tile_size, i * self.tile_size,
                     (j + 1) * self.tile_size, (i + 1) * self.tile_size)
 
-        # Update the scrollregion of the canvas to encompass the inner frame
         self.frame_inside_canvas.update_idletasks()
         self.canvas.config(scrollregion=self.canvas.bbox("all"))
 
-        # Bind the mouse scroll event to scrolling function
         self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
         self.canvas.bind_all("<Shift-MouseWheel>", self._on_shiftmousewheel)
+
+    # Factory methods
+    def create_label(self, parent, text, **pack_options):
+        label = tk.Label(parent, text=text)
+        label.pack(**pack_options)
+        return label
+
+    def create_frame(self, parent, **pack_options):
+        frame = tk.Frame(parent)
+        frame.pack(**pack_options)
+        return frame
+
+    def create_canvas(self, parent, **pack_options):
+        canvas = tk.Canvas(parent)
+        canvas.pack(**pack_options)
+        return canvas
+
+    def create_scrollbar(self, parent, orient, command, **pack_options):
+        scrollbar = tk.Scrollbar(parent, orient=orient, command=command)
+        scrollbar.pack(**pack_options)
+        return scrollbar
 
     def _on_mousewheel(self, event):
         self.canvas.yview_scroll(-1*(event.delta//120), "units")
