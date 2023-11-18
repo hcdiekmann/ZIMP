@@ -1,5 +1,7 @@
 import unittest
+from unittest import mock
 from tkinter import Tk
+from PIL import Image
 from GUI.gui import GUI
 
 
@@ -7,7 +9,7 @@ class TestGUI(unittest.TestCase):
 
     def setUp(self):
         self.root = Tk()
-        self.gui = GUI()
+        self.gui = GUI(root=self.root)
 
     def tearDown(self):
         self.root.quit()
@@ -40,14 +42,28 @@ class TestGUI(unittest.TestCase):
         self.assertEqual(self.gui.player_col, 2)
 
     def test_move_player(self):
-        self.gui.move_player(1, 2)
+        self.gui._move_player(1, 2)
         self.assertEqual(self.gui.player_row, 1)
         self.assertEqual(self.gui.player_col, 2)
 
     def test_player_marker_color(self):
-        self.gui.draw_player()
+        self.gui._draw_player()
         marker_color = self.gui.canvas.itemcget(self.gui.player_marker, "fill")
         self.assertEqual(marker_color, "red")
+
+    @mock.patch('tile.Tile')
+    def test_place_tile(self, MockTile):
+        mock_tile = MockTile()
+        mock_image = Image.new('RGB', (100, 100), 'green')
+        mock_tile.image = mock_image
+        row = 1
+        col = 2
+
+        # Act
+        self.gui.place_tile(mock_tile, row, col)
+
+        # Assert
+        self.assertEqual(len(self.gui.images), 1)
 
 
 if __name__ == '__main__':
