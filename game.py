@@ -1,9 +1,10 @@
 from board import Board
 from player import Player
 from GUI.gui import GUI
+from game_observer import Subject, GameObserver
 
 
-class Game:
+class Game(Subject):
     """
     The Game class controls the game logic eg (movement, attack)
     """
@@ -12,25 +13,37 @@ class Game:
         self.player = Player(start_coordinates)
         self.board = Board(start_coordinates, card_data, card_image)
         self.gui = GUI(board_size=board_size)
+        self._observers = []
         self.completed_turn_sequence = False
         self._setup(start_coordinates)
 
     def _setup(self, start_coordinates):
         self.gui.place_tile(self.board.foyer_tile, *start_coordinates)
-        self._update_gui_labels()
+        self.attach(self.gui)
+        self.notify()
         self._print_current_room()
+
+    def attach(self, observer: GameObserver):
+        """Attach an observer to the subject."""
+        self._observers.append(observer)
+
+    def detach(self, observer: GameObserver):
+        """Detach an observer from the subject."""
+        self._observers.remove(observer)
+
+    def notify(self):
+        """Notify all observers about an event."""
+        for observer in self._observers:
+            observer.update_dev_cards(
+                self.board.dev_cards.count, self.board.time)
+            observer.update_tile_count(
+                self.board.indoor_tiles.count, self.board.outdoor_tiles.count)
+            observer.update_player_info(
+                self.player.health, self.player.attack, self.player.items,
+                self.player.location)
 
     def get_details(self):
         print(self.player.get_details())
-
-    def _update_gui_labels(self):
-        self.gui.update_dev_cards(
-            self.board.dev_cards.count, self.board.time)
-        self.gui.update_tile_count(
-            self.board.indoor_tiles.count, self.board.outdoor_tiles.count)
-        self.gui.update_player_info(
-            self.player.health, self.player.attack, self.player.items,
-            self.player.location)
 
     def _print_current_room(self):
         print(f"You are in the {self._current_room().name}.")
@@ -155,14 +168,14 @@ class Game:
                 self._get_new_item()
 
         self._print_current_room()
-        self._update_gui_labels()
+        self.notify()
         return
 
     def _runaway_or_fight(self, num_zombies):
         """
         handle logic for running away or fighting
         """
-        self._update_gui_labels()
+        self.notify()
         possible_actions = ['F', 'R']
         print("Enter 'F' to fight or 'R' to run away.")
         action = ""
@@ -273,7 +286,7 @@ class Game:
         self.completed_turn_sequence = False
         self.player.health += 3
         self.board.dev_cards.draw()
-        self._update_gui_labels()
+        self.notify()
         if not self._game_over():
             self._print_current_room()
         return
@@ -364,7 +377,7 @@ class Game:
             print("You died. GAME OVER!")
             return True
 
-        self._update_gui_labels()
+        self.notify()
         return False
 
     def _opposite_direction(self, direction):

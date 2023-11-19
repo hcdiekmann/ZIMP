@@ -8,11 +8,11 @@
 # ---------------------------------------------------------------
 import tkinter as tk
 from PIL import ImageTk
+from game_observer import GameObserver
 
 
-class GUI:
-    """Displays the game board and player information.
-    """
+class GUI(GameObserver):
+    """Displays the board and player information."""
 
     def __init__(self, root=None, board_size=(7, 7), tile_size=120):
         self.root = root if root else tk.Tk()
@@ -20,8 +20,6 @@ class GUI:
         self.images = []
         cols, rows = board_size
         self.tile_size = tile_size
-        self.player_row = 0
-        self.player_col = 0
 
         self.main_frame = self.create_frame(self.root, fill=tk.BOTH, expand=1)
         self.canvas_frame = self.create_frame(
@@ -90,6 +88,7 @@ class GUI:
         scrollbar.pack(**pack_options)
         return scrollbar
 
+    # Event handlers
     def _on_mousewheel(self, event):
         self.canvas.yview_scroll(-1*(event.delta//120), "units")
 
@@ -107,6 +106,7 @@ class GUI:
             image=tile_tk_image, anchor=tk.NW)
         self.images.append(tile_tk_image)
 
+    # Observer methods
     def update_dev_cards(self, cards_count, current_time):
         """Updates the development cards and time labels.
         """
@@ -127,29 +127,20 @@ class GUI:
         self.lable_health.config(text=f"Health: {health}")
         self.lable_attack.config(text=f"Attack: {attack}")
         self.items.config(text=f"Items: {items}")
-        self._move_player(*location)
+        self._draw_player(*location)
 
-    def _move_player(self, row, col):
-        """Moves the player marker to the given row and column.
-        """
-        self.player_row = row
-        self.player_col = col
-        self._draw_player()
-
-    def _draw_player(self):
+    def _draw_player(self, row, col):
         """Draws the player marker on the board.
         """
         # Remove the previous player marker (if it exists)
         if hasattr(self, 'player_marker'):
             self.canvas.delete(self.player_marker)
 
-        # Calculate the size of the marker as one-eighth the tile size
+        # one-eighth the tile size
         marker_size = self.tile_size // 8
-
-        # Draw a new marker at the player's current position
         self.player_marker = self.canvas.create_oval(
-            self.player_col * self.tile_size + 3 * marker_size,
-            self.player_row * self.tile_size + 3 * marker_size,
-            (self.player_col + 1) * self.tile_size - 3 * marker_size,
-            (self.player_row + 1) * self.tile_size - 3 * marker_size,
+            col * self.tile_size + 3 * marker_size,
+            row * self.tile_size + 3 * marker_size,
+            (col + 1) * self.tile_size - 3 * marker_size,
+            (row + 1) * self.tile_size - 3 * marker_size,
             fill="red")
